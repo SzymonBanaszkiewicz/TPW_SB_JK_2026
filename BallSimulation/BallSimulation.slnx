@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Data/Data.csproj" Id="59d53770-8881-4c84-b906-ee1e28e0a7a1" />
+  <Project Path="Logic/Logic.csproj" Id="e4a0dbcd-fb75-4a7f-bbf3-f2bd39a4911c" />
+  <Project Path="Model/Model.csproj" Id="3426f419-5b9a-45f7-ba2f-c027f58a50e9" />
+  <Project Path="Tests/Tests.csproj" Id="b0d75eb4-0f3e-4ef6-bcba-064a30b477eb" />
+  <Project Path="View/View.csproj" Id="474fa191-e04b-478c-b7b4-719929aa9cac" />
+  <Project Path="ViewModel/ViewModel.csproj" Id="df248a4f-0365-4e6c-9fed-5ddbedd3203e" />
+</Solution>
