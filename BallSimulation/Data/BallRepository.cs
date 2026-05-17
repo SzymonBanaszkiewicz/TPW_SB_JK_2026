@@ -6,22 +6,50 @@ namespace Data
     {
         private readonly List<Ball> balls = new();
         private readonly Random random = new();
+        private readonly object _lock = new();
 
-        public IEnumerable<Ball> GetBalls() => balls;
+        public IEnumerable<Ball> GetBalls()
+        {
+            lock (_lock)
+            {
+                return balls.ToList();
+            }
+        }
 
         public void CreateBalls(int count, double width, double height)
         {
-            balls.Clear();
-            
-            for (int i = 0; i < count; i++)
+            lock (_lock)
             {
-                balls.Add(new Ball
+                balls.Clear();
+
+                for (int i = 0; i < count; i++)
                 {
-                    X = random.NextDouble() * width/1.1,
-                    Y = random.NextDouble() * height/1.1,
-                    VelocityX = random.NextDouble() * 4 - 2,
-                    VelocityY = random.NextDouble() * 4 - 2
-                });
+                    double radius = random.Next(10, 25);
+
+                    balls.Add(new Ball
+                    {
+                        Radius = radius,
+                        Mass = radius, 
+
+                        X = random.NextDouble() * (width - radius * 2),
+                        Y = random.NextDouble() * (height - radius * 2),
+
+                        VelocityX = random.NextDouble() * 4 - 2,
+                        VelocityY = random.NextDouble() * 4 - 2
+                    });
+                }
+            }
+        }
+
+        public void MoveBalls()
+        {
+            lock (_lock)
+            {
+                foreach (var ball in balls)
+                {
+                    ball.X += ball.VelocityX;
+                    ball.Y += ball.VelocityY;
+                }
             }
         }
     }

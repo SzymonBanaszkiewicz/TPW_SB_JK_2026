@@ -1,18 +1,21 @@
 ﻿using Logic;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
-
-using System.Windows.Threading;
+using System.Linq;
 
 namespace ViewModel
 {
     public class MainViewModel
     {
         private readonly IBallLogic logic;
-        private readonly DispatcherTimer timer;
+
+        private readonly CancellationTokenSource tokenSource = new();
+
+        private const double CanvasWidth = 500;
+        private const double CanvasHeight = 300;
 
         public ObservableCollection<BallViewModel> Balls { get; set; } = new();
 
@@ -26,15 +29,13 @@ namespace ViewModel
 
             CreateBallsCommand = new RelayCommand(CreateBalls);
 
-            timer = new DispatcherTimer();
-            timer.Interval = System.TimeSpan.FromMilliseconds(20);
-            timer.Tick += (s, e) => Update();
-            timer.Start();
+            StartSimulation();
         }
 
         private void CreateBalls()
         {
             logic.CreateBalls(BallCount);
+
             Balls.Clear();
 
             foreach (var ball in logic.GetBalls())
@@ -42,21 +43,30 @@ namespace ViewModel
                 Balls.Add(new BallViewModel
                 {
                     X = ball.X,
-                    Y = ball.Y
+                    Y = ball.Y,
+                    Diameter = ball.Diameter
                 });
             }
         }
 
-        private void Update()
+        private async void StartSimulation()
         {
-            logic.Update(500, 300);
-
-            int i = 0;
-            foreach (var ball in logic.GetBalls())
+            while (!tokenSource.Token.IsCancellationRequested)
             {
-                Balls[i].X = ball.X;
-                Balls[i].Y = ball.Y;
-                i++;
+                logic.Update(CanvasWidth, CanvasHeight);
+
+                var logicBalls = logic.GetBalls().ToList();
+
+                if (logicBalls.Count == Balls.Count)
+                {
+                    for (int i = 0; i < logicBalls.Count; i++)
+                    {
+                        Balls[i].X = logicBalls[i].X;
+                        Balls[i].Y = logicBalls[i].Y;
+                    }
+                }
+
+                await Task.Delay(20);
             }
         }
     }

@@ -9,5 +9,9 @@
         public double VelocityY { get; set; }
 
         public double Radius { get; set; } = 10;
+
+        public double Mass { get; set; } = 1;
+
+        public double Diameter => Radius * 2;
     }
 }
