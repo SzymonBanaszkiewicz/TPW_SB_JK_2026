@@ -7,30 +7,64 @@ namespace Tests
     public class BallLogicTests
     {
         [Fact]
-        public void CreateBalls_ShouldCreateCorrectNumber()
+        public void Ball_ShouldBounceFromWall()
         {
-            var repo = new BallRepository();
-            var logic = new BallLogic(repo);
+            var balls = new List<Ball>
+            {
+                new Ball
+                {
+                    X = 0,
+                    Y = 100,
+                    VelocityX = -2,
+                    VelocityY = 0,
+                    Radius = 10,
+                    Mass = 1
+                }
+            };
 
-            logic.CreateBalls(5);
+            var repository = new FakeBallRepository(balls);
 
-            Assert.Equal(5, logic.GetBalls().Count());
-        }
-
-        [Fact]
-        public void Update_ShouldChangePosition()
-        {
-            var repo = new BallRepository();
-            var logic = new BallLogic(repo);
-
-            logic.CreateBalls(1);
-            var ball = logic.GetBalls().First();
-
-            var oldX = ball.X;
+            var logic = new BallLogic(repository);
 
             logic.Update(500, 300);
 
-            Assert.NotEqual(oldX, ball.X);
+            Assert.True(balls[0].VelocityX > 0);
+        }
+
+        [Fact]
+        public void Balls_ShouldChangeVelocityAfterCollision()
+        {
+            var balls = new List<Ball>
+            {
+                new Ball
+                {
+                    X = 100,
+                    Y = 100,
+                    VelocityX = 1,
+                    VelocityY = 0,
+                    Radius = 10,
+                    Mass = 1
+                },
+
+                new Ball
+                {
+                    X = 119,
+                    Y = 100,
+                    VelocityX = -1,
+                    VelocityY = 0,
+                    Radius = 10,
+                    Mass = 1
+                }
+            };
+
+            var repository = new FakeBallRepository(balls);
+
+            var logic = new BallLogic(repository);
+
+            logic.Update(500, 300);
+
+            Assert.True(balls[0].VelocityX < 0);
+            Assert.True(balls[1].VelocityX > 0);
         }
     }
 }
