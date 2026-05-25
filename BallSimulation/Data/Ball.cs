@@ -9,33 +9,23 @@ namespace Data
         private double _y;
         private double _velocityX;
         private double _velocityY;
-
-        private readonly object _positionLock = new();
-        private readonly object _velocityLock = new();
         private bool _isRunning = true;
 
         public override event EventHandler<IBall>? PositionChanged;
 
-        public override double X
-        {
-            get { lock (_positionLock) return _x; }
-        }
-
-        public override double Y
-        {
-            get { lock (_positionLock) return _y; }
-        }
+        public override double X => _x;
+        public override double Y => _y;
 
         public override double VelocityX
         {
-            get { lock (_velocityLock) return _velocityX; }
-            set { lock (_velocityLock) _velocityX = value; }
+            get => _velocityX;
+            set => _velocityX = value;
         }
 
         public override double VelocityY
         {
-            get { lock (_velocityLock) return _velocityY; }
-            set { lock (_velocityLock) _velocityY = value; }
+            get => _velocityY;
+            set => _velocityY = value;
         }
 
         public override double Radius { get; }
@@ -59,6 +49,7 @@ namespace Data
             while (_isRunning)
             {
                 Move();
+                PositionChanged?.Invoke(this, this);
 
                 await Task.Delay(16);
             }
@@ -66,13 +57,14 @@ namespace Data
 
         public override void Move()
         {
-            lock (_positionLock)
-            {
-                _x += VelocityX;
-                _y += VelocityY;
-            }
+            _x += _velocityX;
+            _y += _velocityY;
+        }
 
-            PositionChanged?.Invoke(this, this);
+        public override void SetPosition(double x, double y)
+        {
+            _x = x;
+            _y = y;
         }
 
         public void Dispose()

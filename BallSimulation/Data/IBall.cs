@@ -20,5 +20,6 @@ namespace Data
         public abstract double Diameter { get; }
 
         public abstract void Move();
+        public abstract void SetPosition(double x, double y);
     }
 }

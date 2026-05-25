@@ -7,7 +7,7 @@ namespace Logic
     internal class LogicApi : LogicAbstractApi
     {
         private readonly DataAbstractApi _dataApi;
-        private readonly object _collisionLock = new(); // Sekcja krytyczna 
+        private readonly object _collisionLock = new();
 
         private const double Width = 500;
         private const double Height = 300;
@@ -21,7 +21,6 @@ namespace Logic
         {
             _dataApi.CreateBalls(ballCount, Width, Height);
 
-            // Reaktywnosc
             foreach (var ball in _dataApi.GetBalls())
             {
                 ball.PositionChanged += OnBallPositionChanged;
@@ -42,10 +41,8 @@ namespace Logic
             _dataApi.Stop();
         }
 
-        // wywolanie asynchronicznie
         private void OnBallPositionChanged(object? sender, IBall ball)
         {
-            // Ochrona 
             lock (_collisionLock)
             {
                 HandleWallCollision(ball);
@@ -55,23 +52,19 @@ namespace Logic
 
         private void HandleWallCollision(IBall ball)
         {
-            // lewa
             if (ball.X <= 0 && ball.VelocityX < 0)
             {
                 ball.VelocityX = -ball.VelocityX;
             }
-            // prawa
             else if (ball.X + ball.Diameter >= Width && ball.VelocityX > 0)
             {
                 ball.VelocityX = -ball.VelocityX;
             }
 
-            // górna
             if (ball.Y <= 0 && ball.VelocityY < 0)
             {
                 ball.VelocityY = -ball.VelocityY;
             }
-            // dolna
             else if (ball.Y + ball.Diameter >= Height && ball.VelocityY > 0)
             {
                 ball.VelocityY = -ball.VelocityY;
@@ -102,6 +95,15 @@ namespace Logic
 
             double nx = dx / distance;
             double ny = dy / distance;
+
+            double overlap = (b1.Radius + b2.Radius) - distance;
+            double totalMass = b1.Mass + b2.Mass;
+
+            double separationX = nx * overlap;
+            double separationY = ny * overlap;
+
+            b1.SetPosition(b1.X - separationX * (b2.Mass / totalMass), b1.Y - separationY * (b2.Mass / totalMass));
+            b2.SetPosition(b2.X + separationX * (b1.Mass / totalMass), b2.Y + separationY * (b1.Mass / totalMass));
 
             double rvx = b2.VelocityX - b1.VelocityX;
             double rvy = b2.VelocityY - b1.VelocityY;
