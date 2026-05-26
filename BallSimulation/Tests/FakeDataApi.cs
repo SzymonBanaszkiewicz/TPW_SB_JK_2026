@@ -6,6 +6,10 @@ namespace ProjectTests
 {
     public class FakeBall : IBall
     {
+
+        private double _x;
+        private double _y;
+
         private EventHandler<IBall>? _positionChanged;
         public override event EventHandler<IBall>? PositionChanged
         {
@@ -13,8 +17,9 @@ namespace ProjectTests
             remove => _positionChanged -= value;
         }
 
-        public override double X { get; }
-        public override double Y { get; }
+        public override double X => _x;
+        public override double Y => _y;
+
 
         private double _velocityX;
         public override double VelocityX
@@ -36,8 +41,8 @@ namespace ProjectTests
 
         public FakeBall(double x, double y, double vx, double vy, double radius, double mass)
         {
-            X = x;
-            Y = y;
+            _x = x;
+            _y = y;
             _velocityX = vx;
             _velocityY = vy;
             Radius = radius;
@@ -47,6 +52,12 @@ namespace ProjectTests
         public override void Move()
         {
             _positionChanged?.Invoke(this, this);
+        }
+
+        public override void SetPosition(double x, double y)
+        {
+            _x = x;
+            _y = y;
         }
     }
 
