@@ -9,8 +9,8 @@ namespace Logic
         private readonly DataAbstractApi _dataApi;
         private readonly object _collisionLock = new();
 
-        private const double Width = 500;
-        private const double Height = 300;
+        public override double Width { get; set; } = 500;
+        public override double Height { get; set; } = 300;
 
         public LogicApi(DataAbstractApi dataApi)
         {
@@ -43,11 +43,8 @@ namespace Logic
 
         private void OnBallPositionChanged(object? sender, IBall ball)
         {
-            lock (_collisionLock)
-            {
-                HandleWallCollision(ball);
-                HandleBallCollisions(ball);
-            }
+            HandleWallCollision(ball);
+            HandleBallCollisions(ball);
         }
 
         private void HandleWallCollision(IBall ball)

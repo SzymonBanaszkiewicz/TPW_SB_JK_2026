@@ -8,6 +8,7 @@ namespace Presentation.Model
     {
         public abstract void Start(int ballCount);
         public abstract void Stop();
+        public abstract void UpdateBoardSize(double width, double height); 
         public abstract IEnumerable<IBall> GetBalls();
 
         public static ModelAbstractApi CreateApi(LogicAbstractApi? logicApi = null)

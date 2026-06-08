@@ -9,7 +9,7 @@ namespace Presentation.ViewModel
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly ModelAbstractApi _modelApi;
-        private int _ballCount = 5; // Domyślna wartość początkowa kul
+        private int _ballCount = 5;
 
         public ObservableCollection<BallViewModel> Balls { get; } = new();
         public ICommand StartCommand { get; }
@@ -26,10 +26,8 @@ namespace Presentation.ViewModel
             }
         }
 
-        // Konstruktor bezparametrowy wymagany do poprawnego bindowania w XAML (jako DataContext)
         public MainViewModel() : this(ModelAbstractApi.CreateApi()) { }
 
-        // Konstruktor z wstrzykiwaniem zależności (Dependency Injection) ułatwiający testowanie
         public MainViewModel(ModelAbstractApi modelApi)
         {
             _modelApi = modelApi;
@@ -39,7 +37,7 @@ namespace Presentation.ViewModel
 
         private void StartSimulation()
         {
-            StopSimulation(); // Zapewnia czyszczenie przed nowym uruchomieniem
+            StopSimulation();
             _modelApi.Start(BallCount);
 
             foreach (var ball in _modelApi.GetBalls())
@@ -52,6 +50,11 @@ namespace Presentation.ViewModel
         {
             _modelApi.Stop();
             Balls.Clear();
+        }
+
+        public void ChangeStageSize(double width, double height)
+        {
+            _modelApi.UpdateBoardSize(width, height);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

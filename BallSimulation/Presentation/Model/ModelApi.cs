@@ -23,6 +23,12 @@ namespace Presentation.Model
             _logicApi.StopSimulation();
         }
 
+        public override void UpdateBoardSize(double width, double height)
+        {
+            _logicApi.Width = width;
+            _logicApi.Height = height;
+        }
+
         public override IEnumerable<IBall> GetBalls()
         {
             return _logicApi.GetBalls();

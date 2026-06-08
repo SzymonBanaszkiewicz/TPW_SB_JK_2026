@@ -8,15 +8,21 @@
         <vm:MainViewModel />
     </Window.DataContext>
 
-    <StackPanel Margin="10">
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Liczba kul: " VerticalAlignment="Center" Margin="0,0,5,0"/>
             <TextBox Width="50" Text="{Binding BallCount, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
             <Button Content="Start" Command="{Binding StartCommand}" Width="75" Margin="10,0,5,0" />
+            <Button Content="Stop" Command="{Binding StopCommand}" Width="75" Margin="5,0,5,0" />
         </StackPanel>
 
-        <Border BorderBrush="DarkGray" BorderThickness="2" HorizontalAlignment="Left">
-            <Canvas Width="500" Height="300" Background="LightGray">
+        <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="2">
+            <Canvas x:Name="PlaygroundCanvas" Background="LightGray" SizeChanged="Canvas_SizeChanged">
                 <ItemsControl ItemsSource="{Binding Balls}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -39,5 +45,5 @@
                 </ItemsControl>
             </Canvas>
         </Border>
-    </StackPanel>
+    </Grid>
 </Window>

@@ -11,21 +11,24 @@ namespace Data
         private double _velocityY;
         private bool _isRunning = true;
 
+        // każda kula ma swoją blokadę
+        private readonly object _ballLock = new();
+
         public override event EventHandler<IBall>? PositionChanged;
 
-        public override double X => _x;
-        public override double Y => _y;
+        public override double X { get { lock (_ballLock) return _x; } }
+        public override double Y { get { lock (_ballLock) return _y; } }
 
         public override double VelocityX
         {
-            get => _velocityX;
-            set => _velocityX = value;
+            get { lock (_ballLock) return _velocityX; }
+            set { lock (_ballLock) { _velocityX = value; } }
         }
 
         public override double VelocityY
         {
-            get => _velocityY;
-            set => _velocityY = value;
+            get { lock (_ballLock) return _velocityY; }
+            set { lock (_ballLock) { _velocityY = value; } }
         }
 
         public override double Radius { get; }
@@ -57,14 +60,20 @@ namespace Data
 
         public override void Move()
         {
-            _x += _velocityX;
-            _y += _velocityY;
+            lock (_ballLock)
+            {
+                _x += _velocityX;
+                _y += _velocityY;
+            }
         }
 
         public override void SetPosition(double x, double y)
         {
-            _x = x;
-            _y = y;
+            lock (_ballLock)
+            {
+                _x = x;
+                _y = y;
+            }
         }
 
         public void Dispose()
