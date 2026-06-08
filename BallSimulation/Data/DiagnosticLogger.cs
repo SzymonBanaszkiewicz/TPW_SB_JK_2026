@@ -3,15 +3,19 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Data
 {
     public static class DiagnosticLogger
     {
-        private static readonly BlockingCollection<string> _logQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
+        private static readonly BlockingCollection<string> _logQueue =
+            new(new ConcurrentQueue<string>());
+
         private static readonly string _filePath = "simulation_diagnostic.log";
+
         private static readonly Thread _loggingThread;
+
+        private static volatile bool _isRunning = true;
 
         static DiagnosticLogger()
         {
@@ -25,33 +29,43 @@ namespace Data
 
         public static void QueueLog(string message)
         {
-            if (!_logQueue.IsAddingCompleted)
+            if (!_isRunning) return;
+
+            try
             {
                 _logQueue.Add(message);
+            }
+            catch (InvalidOperationException)
+            {
+                // logger zamknięty
             }
         }
 
         private static void ProcessQueue()
         {
-            using (StreamWriter writer = new StreamWriter(_filePath, true, Encoding.ASCII))
+            using var writer = new StreamWriter(_filePath, true, Encoding.UTF8);
+
+            foreach (var logLine in _logQueue.GetConsumingEnumerable())
             {
-                foreach (var logLine in _logQueue.GetConsumingEnumerable())
+                try
                 {
-                    try
-                    {
-                        writer.WriteLine(logLine);
-                    }
-                    catch (IOException)
-                    {
-                        Thread.Sleep(10);
-                    }
+                    writer.WriteLine(logLine);
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(10);
                 }
             }
+
+            writer.Flush();
         }
 
-        public static void Stop()
+
+        public static void Shutdown()
         {
+            _isRunning = false;
             _logQueue.CompleteAdding();
+            _loggingThread.Join();
         }
     }
 }

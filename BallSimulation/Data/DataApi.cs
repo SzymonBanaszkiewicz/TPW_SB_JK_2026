@@ -50,7 +50,8 @@ namespace Data
                 {
                     ball.Dispose();
                 }
-                DiagnosticLogger.Stop();
+
+                _balls.Clear();
             }
         }
     }
