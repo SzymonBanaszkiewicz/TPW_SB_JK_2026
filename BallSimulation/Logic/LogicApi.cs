@@ -93,28 +93,32 @@ namespace Logic
             double nx = dx / distance;
             double ny = dy / distance;
 
-            double overlap = (b1.Radius + b2.Radius) - distance;
-            double totalMass = b1.Mass + b2.Mass;
-
-            double separationX = nx * overlap;
-            double separationY = ny * overlap;
-
-            b1.SetPosition(b1.X - separationX * (b2.Mass / totalMass), b1.Y - separationY * (b2.Mass / totalMass));
-            b2.SetPosition(b2.X + separationX * (b1.Mass / totalMass), b2.Y + separationY * (b1.Mass / totalMass));
-
             double rvx = b2.VelocityX - b1.VelocityX;
             double rvy = b2.VelocityY - b1.VelocityY;
 
             double velocityAlongNormal = rvx * nx + rvy * ny;
 
+
             if (velocityAlongNormal > 0) return;
 
-            double impulse = -(2.0 * velocityAlongNormal) / (1.0 / b1.Mass + 1.0 / b2.Mass);
+            double restitution = 1.0;
+            double impulse = -((1.0 + restitution) * velocityAlongNormal) / (1.0 / b1.Mass + 1.0 / b2.Mass);
 
             b1.VelocityX -= (impulse / b1.Mass) * nx;
             b1.VelocityY -= (impulse / b1.Mass) * ny;
             b2.VelocityX += (impulse / b2.Mass) * nx;
             b2.VelocityY += (impulse / b2.Mass) * ny;
+
+            double overlap = (b1.Radius + b2.Radius) - distance;
+            if (overlap > 0)
+            {
+                double totalMass = b1.Mass + b2.Mass;
+                double separationX = nx * overlap;
+                double separationY = ny * overlap;
+
+                b1.SetPosition(b1.X - separationX * (b2.Mass / totalMass), b1.Y - separationY * (b2.Mass / totalMass));
+                b2.SetPosition(b2.X + separationX * (b1.Mass / totalMass), b2.Y + separationY * (b1.Mass / totalMass));
+            }
         }
     }
 }

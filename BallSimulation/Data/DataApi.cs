@@ -28,7 +28,7 @@ namespace Data
                     double vx = (_random.NextDouble() * 3 + 1) * (_random.Next(2) == 0 ? 1 : -1);
                     double vy = (_random.NextDouble() * 3 + 1) * (_random.Next(2) == 0 ? 1 : -1);
 
-                    Ball newBall = new Ball(x, y, vx, vy, radius, mass);
+                    Ball newBall = new Ball(i, x, y, vx, vy, radius, mass);
                     _balls.Add(newBall);
                 }
             }
@@ -50,6 +50,7 @@ namespace Data
                 {
                     ball.Dispose();
                 }
+                DiagnosticLogger.Stop();
             }
         }
     }

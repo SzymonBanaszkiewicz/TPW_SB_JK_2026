@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Data
@@ -7,12 +8,12 @@ namespace Data
     {
         private double _x;
         private double _y;
-        private double _velocityX;
+        private double _velocityX; 
         private double _velocityY;
         private bool _isRunning = true;
-
-        // każda kula ma swoją blokadę
         private readonly object _ballLock = new();
+
+        private readonly int _id; 
 
         public override event EventHandler<IBall>? PositionChanged;
 
@@ -35,12 +36,13 @@ namespace Data
         public override double Mass { get; }
         public override double Diameter => Radius * 2;
 
-        public Ball(double x, double y, double vx, double vy, double radius, double mass)
+        public Ball(int id, double x, double y, double vx, double vy, double radius, double mass)
         {
+            _id = id;
             _x = x;
             _y = y;
-            _velocityX = vx;
-            _velocityY = vy;
+            _velocityX = vx * 100; 
+            _velocityY = vy * 100;
             Radius = radius;
             Mass = mass;
 
@@ -49,22 +51,38 @@ namespace Data
 
         private async Task BallLoop()
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             while (_isRunning)
             {
-                Move();
+                long elapsedMs = stopwatch.ElapsedMilliseconds;
+                stopwatch.Restart();
+
+                double deltaTime = elapsedMs / 1000.0;
+
+                Move(deltaTime);
                 PositionChanged?.Invoke(this, this);
 
-                await Task.Delay(16);
+                string logData = $"{DateTime.Now:O} | Ball: {_id} | Pos: ({X:F2}, {Y:F2}) | Vel: ({VelocityX:F2}, {VelocityY:F2})";
+                DiagnosticLogger.QueueLog(logData);
+
+                await Task.Delay(16); 
+            }
+        }
+
+        public void Move(double deltaTime)
+        {
+            lock (_ballLock)
+            {
+                _x += _velocityX * deltaTime;
+                _y += _velocityY * deltaTime;
             }
         }
 
         public override void Move()
         {
-            lock (_ballLock)
-            {
-                _x += _velocityX;
-                _y += _velocityY;
-            }
+            Move(0.016);
         }
 
         public override void SetPosition(double x, double y)
