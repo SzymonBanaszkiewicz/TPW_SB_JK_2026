@@ -70,18 +70,21 @@ namespace Logic
 
         private void HandleBallCollisions(IBall currentBall)
         {
-            foreach (var otherBall in _dataApi.GetBalls())
+            lock (_collisionLock)
             {
-                if (currentBall == otherBall) continue;
-
-                double dx = (otherBall.X + otherBall.Radius) - (currentBall.X + currentBall.Radius);
-                double dy = (otherBall.Y + otherBall.Radius) - (currentBall.Y + currentBall.Radius);
-                double distance = Math.Sqrt(dx * dx + dy * dy);
-                double minDistance = currentBall.Radius + otherBall.Radius;
-
-                if (distance < minDistance)
+                foreach (var otherBall in _dataApi.GetBalls())
                 {
-                    ResolveCollision(currentBall, otherBall, distance, dx, dy);
+                    if (currentBall == otherBall) continue;
+
+                    double dx = (otherBall.X + otherBall.Radius) - (currentBall.X + currentBall.Radius);
+                    double dy = (otherBall.Y + otherBall.Radius) - (currentBall.Y + currentBall.Radius);
+                    double distance = Math.Sqrt(dx * dx + dy * dy);
+                    double minDistance = currentBall.Radius + otherBall.Radius;
+
+                    if (distance < minDistance)
+                    {
+                        ResolveCollision(currentBall, otherBall, distance, dx, dy);
+                    }
                 }
             }
         }
@@ -99,7 +102,7 @@ namespace Logic
             double velocityAlongNormal = rvx * nx + rvy * ny;
 
 
-            if (velocityAlongNormal > 0) return;
+            if (velocityAlongNormal >= 0) return;
 
             double restitution = 1.0;
             double impulse = -((1.0 + restitution) * velocityAlongNormal) / (1.0 / b1.Mass + 1.0 / b2.Mass);

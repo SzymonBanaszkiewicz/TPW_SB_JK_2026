@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Data
 {
@@ -8,28 +7,31 @@ namespace Data
     {
         private double _x;
         private double _y;
-        private double _velocityX; 
+        private double _velocityX;
         private double _velocityY;
-        private bool _isRunning = true;
-        private readonly object _ballLock = new();
 
-        private readonly int _id; 
+        private readonly object _ballLock = new();
+        private readonly Timer _timer;
+
+        private bool _disposed;
+        private int _isUpdating; 
+
+        private readonly int _id;
+        private const double DeltaTime = 0.016; // 16 ms
 
         public override event EventHandler<IBall>? PositionChanged;
 
         public override double X { get { lock (_ballLock) return _x; } }
         public override double Y { get { lock (_ballLock) return _y; } }
-
         public override double VelocityX
         {
             get { lock (_ballLock) return _velocityX; }
-            set { lock (_ballLock) { _velocityX = value; } }
+            set { lock (_ballLock) _velocityX = value; }
         }
-
         public override double VelocityY
         {
             get { lock (_ballLock) return _velocityY; }
-            set { lock (_ballLock) { _velocityY = value; } }
+            set { lock (_ballLock) _velocityY = value; }
         }
 
         public override double Radius { get; }
@@ -41,48 +43,46 @@ namespace Data
             _id = id;
             _x = x;
             _y = y;
-            _velocityX = vx * 100; 
+            _velocityX = vx * 100;
             _velocityY = vy * 100;
             Radius = radius;
             Mass = mass;
 
-            Task.Run(BallLoop);
+            _timer = new Timer(Update, null, 0, 16);
         }
 
-        private async Task BallLoop()
+        private void Update(object? state)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
+            if (_disposed) return;
 
-            while (_isRunning)
+            if (Interlocked.CompareExchange(ref _isUpdating, 1, 0) != 0)
+                return;
+
+            try
             {
-                long elapsedMs = stopwatch.ElapsedMilliseconds;
-                stopwatch.Restart();
+                double localX, localY, localVx, localVy;
 
-                double deltaTime = elapsedMs / 1000.0;
+                lock (_ballLock)
+                {
+                    _x += _velocityX * DeltaTime;
+                    _y += _velocityY * DeltaTime;
 
-                Move(deltaTime);
+                    localX = _x;
+                    localY = _y;
+                    localVx = _velocityX;
+                    localVy = _velocityY;
+                }
+
+
                 PositionChanged?.Invoke(this, this);
 
-                string logData = $"{DateTime.Now:O} | Ball: {_id} | Pos: ({X:F2}, {Y:F2}) | Vel: ({VelocityX:F2}, {VelocityY:F2})";
-                DiagnosticLogger.QueueLog(logData);
-
-                await Task.Delay(16); 
+                DiagnosticLogger.QueueLog(
+                    $"{DateTime.Now:O} | Ball: {_id} | Pos: ({localX:F2}, {localY:F2}) | Vel: ({localVx:F2}, {localVy:F2})");
             }
-        }
-
-        public void Move(double deltaTime)
-        {
-            lock (_ballLock)
+            finally
             {
-                _x += _velocityX * deltaTime;
-                _y += _velocityY * deltaTime;
+                Interlocked.Exchange(ref _isUpdating, 0);
             }
-        }
-
-        public override void Move()
-        {
-            Move(0.016);
         }
 
         public override void SetPosition(double x, double y)
@@ -94,9 +94,19 @@ namespace Data
             }
         }
 
+        public override void Move()
+        {
+            lock (_ballLock)
+            {
+                _x += _velocityX * DeltaTime;
+                _y += _velocityY * DeltaTime;
+            }
+        }
+
         public void Dispose()
         {
-            _isRunning = false;
+            _disposed = true;
+            _timer.Dispose();
         }
     }
 }
